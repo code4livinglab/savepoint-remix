@@ -1,0 +1,47 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions", "fullTextSearch"]
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]  // Caveats when deploying to AWS platforms
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector", schema: "public")]
+}
+
+model User {
+  id          String        @id
+  name        String
+  email       String        @unique
+  password    String
+  projects    ProjectUser[]
+  created     DateTime      @default(now())
+  updated     DateTime      @default(now()) @updatedAt
+}
+
+model Project {
+  id          String        @id
+  name        String
+  description String
+  embedding   Unsupported("vector")?
+  users       ProjectUser[]
+  created     DateTime      @default(now())
+  updated     DateTime      @default(now()) @updatedAt
+}
+
+model ProjectUser {
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+  role      ProjectRole
+
+  @@id([userId, projectId])
+}
+
+enum ProjectRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
