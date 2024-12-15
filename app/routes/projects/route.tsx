@@ -2,8 +2,6 @@ import { embed } from 'ai'
 import { randomUUID } from 'crypto'
 import pgvector from 'pgvector'
 import { openai } from '@ai-sdk/openai'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import { fromCognitoIdentityPool } from '@aws-sdk/credential-providers'
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
 import { Outlet, useLoaderData } from "@remix-run/react"
 import { AppBar } from "@/components/app-bar"
@@ -12,15 +10,6 @@ import { prisma } from "@/prisma"
 import { authorize } from '@/sessions.server'
 import { Project, ProjectRead } from "@/types"
 import { Explore } from "./explore"
-// import { auth } from '../../auth'
-
-const s3Client = new S3Client({
-  region: import.meta.env.BUCKET_REGION,
-  credentials: fromCognitoIdentityPool({
-    clientConfig: { region: import.meta.env.BUCKET_REGION },
-    identityPoolId: import.meta.env.IDENTITY_POOL_ID as string,
-  }),
-});
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const userId = await authorize(request);
@@ -128,7 +117,7 @@ INSERT INTO
     //   const fileKey = `${dirKey}${file.name}`;
     //   await s3Client.send(
     //     new PutObjectCommand({
-    //       Bucket: import.meta.env.BUCKET_NAME_RAW,
+    //       Bucket: process.env.BUCKET_NAME_RAW,
     //       Key: fileKey,
     //       Body: Buffer.from(fileBuffer),
     //     })

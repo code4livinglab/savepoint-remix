@@ -1,4 +1,5 @@
-import { useNavigate } from '@remix-run/react'
+import { Form, Link, useNavigate } from '@remix-run/react'
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -8,13 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
 import { ProjectRead } from "@/types"
 import { Download, X } from "lucide-react"
 
-export function ProjectCard({ project }: { project: ProjectRead }) {
+export function ProjectCard({
+  project,
+  fileList,
+}: {
+  project: ProjectRead,
+  fileList: { name: string; size: string; url: string }[],
+}) {
   const navigate = useNavigate()
-
+  
   return (
     <Card className="relative flex flex-col justify-between w-96 h-[calc(100dvh-9)]">
       <Button 
@@ -43,53 +49,31 @@ export function ProjectCard({ project }: { project: ProjectRead }) {
               </span>
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="email">サンプル1</Label>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">サンプル2</Label>
-          </div>
-          {/* {project.file_names && project.file_names?.length > 0 && (
-            <>
-              <h2 className="text-xl text-gray-200 font-semibold my-3">Data</h2>
-              {project.file_names.map((filename, i) => (
-                <button key={i}
-                  className="text-left text-gray-300 my-1 hover:text-blue-300 hover:underline"
-                  onClick={()=> viewProjectFile(project.id, filename)}
-                >
-                  ・{filename}
-                </button>
-              ))}
-            </>
-          )} */}
+          {fileList.map((file) => (
+            <div key={file.name} className="grid gap-2">
+              <Link
+                to={file.url}
+                target="_blank"
+                className="flex justify-between text-sm leading-none"
+              >
+                <div>
+                  {file.name}
+                  <Badge variant="secondary" className="mx-2">プレビュー</Badge>
+                </div>
+                <p className="shrink-0">{file.size}</p>
+              </Link>
+            </div>
+          ))}
         </CardContent>
         <CardFooter>
-          <Button className="w-full">
-            <Download />
-            ロードする
-          </Button>
+          <Form className="w-full">
+            <Button className="w-full">
+              <Download />
+              ロードする
+            </Button>
+          </Form>
         </CardFooter>
       </div>
     </Card>
   )
 }
-
-const viewProjectFile = async (projectId: string, fileName: string) => {
-  try {
-    const response = await fetch(`/api/${projectId}/files/${fileName}`);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.json();
-    const href = data.url;
-
-    const a = document.createElement("a");
-    a.href = href;
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  } catch (err) {
-    console.error("viewfile error:", err);
-  }
-};
