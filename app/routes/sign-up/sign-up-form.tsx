@@ -15,7 +15,7 @@ export function SignUpForm() {
           新規登録
         </h1>
         <p className="text-sm text-muted-foreground">
-          以下のフォームを入力してアカウントを作成する
+          フォームを入力してアカウントを作成する
         </p>
       </div>
       <Form method="post">
@@ -106,11 +106,19 @@ export function SignUpForm() {
                 htmlFor="termsAndPolicies"
                 className="text-sm text-muted-foreground"
               >
-                <Link to="/terms" className="underline hover:text-foreground">
+                <Link
+                  to="https://ludicrous-flyingfish-cc4.notion.site/terms-of-use"
+                  target="_blank"
+                  className="underline hover:text-foreground"
+                >
                   利用規約
                 </Link>
                 &thinsp;と&thinsp;
-                <Link to="/policies" className="underline hover:text-foreground">
+                <Link
+                  to="https://ludicrous-flyingfish-cc4.notion.site/privacy-policy"
+                  target="_blank"
+                  className="underline hover:text-foreground"
+                >
                   プライバシーポリシー
                 </Link>
                 &thinsp;に同意する。

@@ -23,7 +23,8 @@ const s3Client = new S3Client({
 });
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authorize(request);
+  const userId = await authorize(request);
+  const user = await prisma.user.findUnique({ where: { id: userId } });
 
   try {
     // プロジェクト一覧を取得
@@ -54,7 +55,10 @@ FROM
       return project
     })
 
-    return projectList
+    return {
+      projectList,
+      user,
+    }
 
   } catch (error) {
     console.error({ error })
@@ -142,7 +146,7 @@ INSERT INTO
 }
 
 export default function ProjectList() {
-  const projectList = useLoaderData<typeof loader>()
+  const { projectList } = useLoaderData<typeof loader>()
 
   return (
     <div className="relative h-dvh">

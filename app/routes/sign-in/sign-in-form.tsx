@@ -14,7 +14,7 @@ export function SignInForm() {
           ログイン
         </h1>
         <p className="text-sm text-muted-foreground">
-          以下のフォームを入力してログインする
+          フォームを入力してログインする
         </p>
       </div>
       <Form method="post">
