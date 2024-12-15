@@ -1,21 +1,18 @@
-import { ActionFunctionArgs, SerializeFrom, json, redirect } from "@remix-run/node"
-import { Form, Link } from "@remix-run/react"
+import { Form, Link, useActionData } from "@remix-run/react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { action } from "./route"
 
-export function SignUpForm({ actionData }: {
-  actionData: SerializeFrom<typeof action>
-}) {
-  const { error } = actionData || {};
+export function SignUpForm() {
+  const error = useActionData<typeof action>();
 
   return (
     <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[360px]">
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          アカウントの新規登録
+          新規登録
         </h1>
         <p className="text-sm text-muted-foreground">
           以下のフォームを入力してアカウントを作成する
@@ -97,35 +94,35 @@ export function SignUpForm({ actionData }: {
           <div className="grid gap-2">
             <div className="flex space-x-2">
               <Checkbox
-                id="terms"
-                name="terms"
+                id="termsAndPolicies"
+                name="termsAndPolicies"
                 className={`
                   self-center
-                  ${error?.terms ? "border-destructive" : "border-muted-foreground"}
+                  ${error?.termsAndPolicies ? "border-destructive" : "border-muted-foreground"}
                   data-[state=checked]:border-primary
                 `}
               />
               <Label
-                htmlFor="terms"
+                htmlFor="termsAndPolicies"
                 className="text-sm text-muted-foreground"
               >
                 <Link to="/terms" className="underline hover:text-foreground">
                   利用規約
                 </Link>
                 &thinsp;と&thinsp;
-                <Link to="/privacy" className="underline hover:text-foreground">
+                <Link to="/policies" className="underline hover:text-foreground">
                   プライバシーポリシー
                 </Link>
                 &thinsp;に同意する。
               </Label>
             </div>
-            {error?.terms && (
+            {error?.termsAndPolicies && (
               <p className="text-sm text-destructive">
-                {error.terms[0]}
+                {error.termsAndPolicies[0]}
               </p>
             )}
           </div>
-          <Button>登録する</Button>
+          <Button type="submit">登録する</Button>
         </div>
       </Form>
     </div>

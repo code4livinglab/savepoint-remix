@@ -1,4 +1,4 @@
-import { json, LoaderFunctionArgs } from '@remix-run/node'
+import { LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { prisma } from '@/prisma'
 import { ProjectRead } from '@/types'
@@ -43,7 +43,7 @@ WHERE
     20
   `
 
-    return json({ project, recommendedProjectList })
+    return { project, recommendedProjectList }
   } catch (error) {
     console.error({ error })
     throw new Response("プロジェクトが見つかりません", { status: 404 });

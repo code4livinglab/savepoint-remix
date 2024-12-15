@@ -4,11 +4,12 @@ import pgvector from 'pgvector'
 import { openai } from '@ai-sdk/openai'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { fromCognitoIdentityPool } from '@aws-sdk/credential-providers'
-import { ActionFunctionArgs, json, redirect } from "@remix-run/node"
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
 import { Outlet, useLoaderData } from "@remix-run/react"
 import { AppBar } from "@/components/app-bar"
 import { pca } from "@/lib/pca"
 import { prisma } from "@/prisma"
+import { authorize } from '@/sessions.server'
 import { Project, ProjectRead } from "@/types"
 import { Explore } from "./explore"
 // import { auth } from '../../auth'
@@ -21,7 +22,9 @@ const s3Client = new S3Client({
   }),
 });
 
-export const loader = async () => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  await authorize(request);
+
   try {
     // プロジェクト一覧を取得
     const textProjectList: ProjectRead[] = await prisma.$queryRaw`
@@ -51,7 +54,7 @@ FROM
       return project
     })
 
-    return json({ projectList })
+    return projectList
 
   } catch (error) {
     console.error({ error })
@@ -139,7 +142,7 @@ INSERT INTO
 }
 
 export default function ProjectList() {
-  const { projectList } = useLoaderData<typeof loader>()
+  const projectList = useLoaderData<typeof loader>()
 
   return (
     <div className="relative h-dvh">

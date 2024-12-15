@@ -21,4 +21,6 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  // サーバーサイドでのみ使用するモジュールを除外
+  optimizeDeps: { exclude: ['bcrypt'] },
 });
