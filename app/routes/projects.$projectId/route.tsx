@@ -1,11 +1,11 @@
+import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { prisma } from '@/prisma'
 import { ProjectRead } from '@/types'
 import { ProjectCard } from './project-card'
 import { ProjectList } from './project-list'
-import { ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3'
-import { fromCognitoIdentityPool } from "@aws-sdk/credential-providers";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const bucketName = process.env.BUCKET_NAME_RAW;
@@ -76,7 +76,7 @@ WHERE
         ? (file.Size / (1000 )).toFixed(1) + " KB"
         : "0 MB"
       const url = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${projectUri}/${name}`
-      
+
       return { name, size, url }
     }).filter((file) => file.name !== "")
   }
@@ -88,11 +88,47 @@ WHERE
   }
 }
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const formData = await request.formData()
-  const file = formData.get('file')
-  console.log(file)
-  return null
+export const action = async ({ params }: ActionFunctionArgs) => {
+  const bucketName = process.env.BUCKET_NAME_RAW;
+  const bucketRegion = process.env.BUCKET_REGION;
+  const identityPoolId = process.env.IDENTITY_POOL_ID as string;
+  const projectsKey = "projects/";
+
+  const client = new S3Client({
+    region: bucketRegion,
+    credentials: fromCognitoIdentityPool({
+      clientConfig: { region: bucketRegion },
+      identityPoolId: identityPoolId as string,
+    }),
+  });
+
+  const projectUri = projectsKey + params.projectId;
+  const filesData = await client.send(
+    new ListObjectsV2Command({
+      Bucket: bucketName,
+      Prefix: projectUri,
+    })
+  );
+
+  const filePromises = filesData.Contents?.map(async (file) => {
+    const fileData = await client.send(
+      new GetObjectCommand({
+        Bucket: bucketName,
+        Key: file.Key,
+      })
+    );
+    
+    if (fileData.Body) {
+      const byteArray = await fileData.Body.transformToByteArray();  // Uint8Array
+      return {
+        key: file.Key,
+        byteArray: byteArray,
+        contentType: fileData.ContentType,
+      };
+    }
+  });
+
+  return await Promise.all(filePromises ?? []);
 }
 
 export default function ProjectDetails() {
