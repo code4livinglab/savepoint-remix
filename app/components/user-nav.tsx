@@ -1,5 +1,5 @@
 import { UserRound } from "lucide-react"
-import { Form, Link, useLoaderData } from "@remix-run/react"
+import { Form, Link, useFetcher, useLoaderData } from "@remix-run/react"
 import {
   Avatar,
   AvatarFallback,
@@ -17,6 +17,7 @@ import {
 import { loader } from "@/routes/projects/route"
 
 export function UserNav() {
+  const fetcher = useFetcher()
   const { user } = useLoaderData<typeof loader>()
 
   return (
@@ -70,11 +71,11 @@ export function UserNav() {
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Form action="/sign-out" method="post">
-            <button type="submit">ログアウト</button>
-          </Form>
-        </DropdownMenuItem>
+        <fetcher.Form action="/sign-out" method="post">
+          <DropdownMenuItem>
+            <button type="submit" className="w-full text-left">ログアウト</button>
+          </DropdownMenuItem>
+        </fetcher.Form>
       </DropdownMenuContent>
     </DropdownMenu>
   )
