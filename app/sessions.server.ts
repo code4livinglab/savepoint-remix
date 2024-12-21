@@ -1,7 +1,8 @@
 import { createCookieSessionStorage, redirect } from "@remix-run/node"
 import { createThemeSessionResolver } from "remix-themes"
 
-// You can default to 'development' if process.env.NODE_ENV is not set
+const domain = process.env.APP_DOMAIN
+const sessionSecret = process.env.SESSION_SECRET as string
 const isProduction = process.env.NODE_ENV === "production"
 
 const sessionStorage = createCookieSessionStorage({
@@ -11,10 +12,9 @@ const sessionStorage = createCookieSessionStorage({
     httpOnly: true,
     maxAge: 60 * 60 * 24,  // 1日間
     sameSite: "lax",
-    secrets: ["s3cr3t"],
-    // Set domain and secure only if in production
+    secrets: [sessionSecret],
     ...(isProduction
-      ? { domain: "your-production-domain.com", secure: true }
+      ? { domain , secure: true }
       : {}),
   },
 })
@@ -22,13 +22,27 @@ const sessionStorage = createCookieSessionStorage({
 export const themeSessionResolver = createThemeSessionResolver(sessionStorage)
 export const { getSession, commitSession, destroySession } = sessionStorage
 
-export async function authorize(request: Request) {
+// クライアントサイドでの認証
+export async function authorizeClient(request: Request) {
   const session = await getSession(request.headers.get("Cookie"));
   const userId: string | undefined = session.get("userId");
 
   if (typeof userId === "undefined") {
-    throw redirect("/sign-in");
+    throw new Response("Unauthorized", { status: 401 });
   }
 
   return userId;
 }
+
+// サーバーサイドでの認証
+export async function authorizeServer(request: Request) {
+  const session = await getSession(request.headers.get("Cookie"));
+  const userId: string | undefined = session.get("userId");
+
+  if (typeof userId === "undefined") {
+    throw new Response("Unauthorized", { status: 401 });
+  }
+
+  return userId;
+}
+
