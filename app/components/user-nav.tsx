@@ -1,5 +1,6 @@
 import { UserRound } from "lucide-react"
-import { Form, Link, useFetcher, useLoaderData } from "@remix-run/react"
+import { useEffect } from "react"
+import { Link, useFetcher } from "@remix-run/react"
 import {
   Avatar,
   AvatarFallback,
@@ -14,11 +15,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { loader } from "@/routes/projects+/_index/route"
+import { loader } from "@/routes/mypage+/profile/route"
 
 export function UserNav() {
-  const fetcher = useFetcher()
-  const { user } = useLoaderData<typeof loader>()
+  // 別ルートのデータを利用
+  const getUserFetcher = useFetcher<typeof loader>()
+  const signOutFetcher = useFetcher()
+
+  // ユーザー情報を取得
+  useEffect(() => {
+    getUserFetcher.load('/mypage/profile')
+  }, [getUserFetcher])
+
+  const user = getUserFetcher.data?.user
 
   return (
     <DropdownMenu>
@@ -35,10 +44,10 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {user?.name}
+              {user?.name ?? "ユーザー名"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user?.email}
+              {user?.email ?? "email@example.com"}
             </p>
             
           </div>
@@ -71,11 +80,11 @@ export function UserNav() {
           </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <fetcher.Form action="/sign-out" method="post">
+        <signOutFetcher.Form action="/sign-out" method="post">
           <DropdownMenuItem>
             <button type="submit" className="w-full text-left">ログアウト</button>
           </DropdownMenuItem>
-        </fetcher.Form>
+        </signOutFetcher.Form>
       </DropdownMenuContent>
     </DropdownMenu>
   )

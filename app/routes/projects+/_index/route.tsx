@@ -5,54 +5,19 @@ import { openai } from '@ai-sdk/openai'
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
 import { Outlet, useLoaderData } from "@remix-run/react"
 import { AppBar } from "@/components/app-bar"
-import { pca } from "@/lib/pca"
 import { prisma } from "@/prisma"
 import { authorizeClient } from '@/sessions.server'
-import { Project, ProjectRead } from "@/types"
-import { Explore } from "./explore"
+import { Explore } from "./components/explore"
+import { getProjectList } from "./queries"
+import { reduceProjectDimension } from "./utils"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const userId = await authorizeClient(request);
-  const user = await prisma.user.findUnique({ where: { id: userId } });
+  await authorizeClient(request);
 
-  try {
-    // プロジェクト一覧を取得
-    const textProjectList: ProjectRead[] = await prisma.$queryRaw`
-SELECT
-  id,
-  name,
-  description,
-  embedding::text,
-  created,
-  updated
-FROM
-  public."Project"
-`
-
-    // ベクトルの形式を変換
-    const numberProjectList: Project[] = textProjectList.map((project) => {
-      const stringEmbedding = project.embedding.toString().replace(/[\[\]]/g, '').split(',')
-      const embedding = stringEmbedding.map((str) => parseFloat(str))
-      return { ...project, embedding }
-    })
-
-    // 次元削減
-    const embeddings = numberProjectList.map((project) => project.embedding)
-    const components = pca(embeddings)
-    const projectList: Project[] = numberProjectList.map((project: any, i: number) => {
-      project.embedding = components[i].slice(0, 3)
-      return project
-    })
-
-    return {
-      projectList,
-      user,
-    }
-
-  } catch (error) {
-    console.error({ error })
-    throw new Response("内部エラー", { status: 500 });
-  }
+  // プロジェクト一覧を取得
+  const rawProjectList = await getProjectList();
+  const projectList = reduceProjectDimension(rawProjectList)  // 次元削減
+  return { projectList }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
