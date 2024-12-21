@@ -1,34 +1,28 @@
-import { compare } from "bcrypt";
+import { hash } from "bcrypt";
 import { z } from "zod";
-import { User } from "@prisma/client";
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
-import { Link, useActionData } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 import { Button } from "@/components/ui/button"
 import { prisma } from "@/prisma"
-import { SignInForm } from "./sign-in-form"
-import { getSession, commitSession } from "../../sessions.server";
+import { getSession, commitSession } from "@/sessions.server";
+import { SignUpForm } from "./sign-up-form"
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-}).refine(async ({ email, password }) => {
-  const user = await prisma.user.findFirst({ where: { email }})
-
-  // ユーザーが存在しない場合
-  if (user === null) {
-    return false
-  }
-
-  // パスワードが一致しない場合
-  const isMatch = await compare(password, user.password);
-  if (!isMatch) {
-    return false
-  }
-
-  return true
-}, {
-  message: 'Email or password is incorrect',
-  path: ['password'],
+  id: z.string().min(1).max(16).toLowerCase().refine(async (id) => {
+    const user = await prisma.user.findFirst({ where: { id }})
+    return user === null
+  }, { message: 'Already used' }),
+  name: z.string().min(1).max(16),
+  email: z.string().email().refine(async (email) => {
+    const user = await prisma.user.findFirst({ where: { email }})
+    return user === null
+  }, { message: 'Already used' }),
+  password: z.string().min(8).max(32),
+  confirmPassword: z.string().min(8).max(32),
+  termsAndPolicies: z.literal("on"),
+}).refine(({ password, confirmPassword }) => password === confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
 });
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -57,10 +51,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return error
     }
 
-    // ユーザー取得
-    // TODO: バリデーションと処理が重複しているため、リファクタリングする
-    const { email, password } = result.data;
-    const user = await prisma.user.findFirst({ where: { email }}) as User;
+    // ユーザー登録
+    const { id, name, email, password } = result.data;
+    const hashedPassword = await hash(password, 10);
+    const user = await prisma.user.create({
+      data: { id, name, email, password: hashedPassword },
+    });
+
 
     // セッションの作成
     const session = await getSession(request.headers.get("Cookie"));
@@ -75,7 +72,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   } catch (error: any) {
     // const message = error.message || "予期せぬエラーが発生しました。";
     console.log({ error });
-    // { error: { message } }
+    // return { error: { message } }
   }
 }
 
@@ -103,7 +100,7 @@ export default function SignIn() {
           variant="ghost"
           className="absolute right-4 top-4 md:right-8 md:top-8"
         >
-          <Link to="/sign-up">ユーザー登録</Link>
+          <Link to="/sign-in">ログイン</Link>
         </Button>
         <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
           <div className="absolute inset-0 bg-zinc-900" />
@@ -129,7 +126,7 @@ export default function SignIn() {
           </div>
         </div>
         <div className="lg:p-8">
-          <SignInForm />
+          <SignUpForm />
         </div>
       </div>
     </>

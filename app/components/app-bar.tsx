@@ -1,6 +1,6 @@
 import { Search } from "@/components/search";
 import { UserNav } from "@/components/user-nav";
-import { ProjectSaveDialog } from "@/routes/projects/project-save-button";
+import { ProjectSaveDialog } from "@/routes/_app+/projects+/_index/project-save-button";
 
 export function AppBar() {
   return (

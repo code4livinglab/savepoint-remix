@@ -7,12 +7,12 @@ import { Outlet, useLoaderData } from "@remix-run/react"
 import { AppBar } from "@/components/app-bar"
 import { pca } from "@/lib/pca"
 import { prisma } from "@/prisma"
-import { authorize } from '@/sessions.server'
+import { authorizeClient } from '@/sessions.server'
 import { Project, ProjectRead } from "@/types"
 import { Explore } from "./explore"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const userId = await authorize(request);
+  const userId = await authorizeClient(request);
   const user = await prisma.user.findUnique({ where: { id: userId } });
 
   try {

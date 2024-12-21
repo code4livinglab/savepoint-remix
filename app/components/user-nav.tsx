@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { loader } from "@/routes/projects/route"
+import { loader } from "@/routes/_app+/projects+/_index/route"
 
 export function UserNav() {
   const fetcher = useFetcher()
