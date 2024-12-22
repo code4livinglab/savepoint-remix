@@ -22,21 +22,10 @@ const sessionStorage = createCookieSessionStorage({
 export const themeSessionResolver = createThemeSessionResolver(sessionStorage)
 export const { getSession, commitSession, destroySession } = sessionStorage
 
-// クライアントサイドでの認証
-export async function authorizeClient(request: Request) {
-  const session = await getSession(request.headers.get("Cookie"));
-  const userId: string | undefined = session.get("userId");
-
-  if (typeof userId === "undefined") {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
-  return userId;
-}
-
-// サーバーサイドでの認証
-export async function authorizeServer(request: Request) {
-  const session = await getSession(request.headers.get("Cookie"));
+// 認証
+export async function authorize(request: Request) {
+  const cookie = request.headers.get("Cookie");
+  const session = await getSession(cookie);
   const userId: string | undefined = session.get("userId");
 
   if (typeof userId === "undefined") {

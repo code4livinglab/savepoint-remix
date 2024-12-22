@@ -1,8 +1,8 @@
 import { ActionFunctionArgs, redirect } from "@remix-run/node"
-import { authorizeClient, destroySession, getSession } from "@/sessions.server"
+import { authorize, destroySession, getSession } from "@/sessions.server"
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  await authorizeClient(request)
+  await authorize(request)
 
   const session = await getSession(request.headers.get("Cookie"));
   return redirect("/sign-in", {

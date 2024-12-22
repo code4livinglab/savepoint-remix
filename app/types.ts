@@ -8,6 +8,13 @@ export type User = {
   updated: string;
 }
 
+export type UserCreate = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;
+}
+
 // プロジェクトの基本型
 export type Project = {
   id: string;
@@ -23,6 +30,7 @@ export type ProjectCreate = {
   id: string;
   name: string;
   description: string;
+  embedding: number[];
 }
 
 // プロジェクトの読み取り時の型（embeddingが文字列）
@@ -35,11 +43,19 @@ export type ProjectRead = {
   updated: string;
 }
 
+export type ProjectUserCreate = {
+  userId: string;
+  projectId: string;
+  role: ProjectRole;
+}
+
 // プロジェクトとユーザーの関連付けの型
 export type ProjectUser = {
   userId: string;
   projectId: string;
   role: ProjectRole;
+  created: string;
+  updated: string;
 }
 
 // プロジェクトの権限を表す型

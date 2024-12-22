@@ -1,33 +1,16 @@
 import { hash } from "bcrypt";
-import { z } from "zod";
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
 import { Link } from "@remix-run/react";
 import { Button } from "@/components/ui/button"
-import { prisma } from "@/prisma"
 import { getSession, commitSession } from "@/sessions.server";
-import { SignUpForm } from "./sign-up-form"
-
-const schema = z.object({
-  id: z.string().min(1).max(16).toLowerCase().refine(async (id) => {
-    const user = await prisma.user.findFirst({ where: { id }})
-    return user === null
-  }, { message: 'Already used' }),
-  name: z.string().min(1).max(16),
-  email: z.string().email().refine(async (email) => {
-    const user = await prisma.user.findFirst({ where: { email }})
-    return user === null
-  }, { message: 'Already used' }),
-  password: z.string().min(8).max(32),
-  confirmPassword: z.string().min(8).max(32),
-  termsAndPolicies: z.literal("on"),
-}).refine(({ password, confirmPassword }) => password === confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+import { SignUpForm } from "./components/sign-up-form"
+import { schema } from "./schema"
+import { createUser } from "../queries";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // セッションの取得
-  const session = await getSession(request.headers.get("Cookie"));
+  const cookie = request.headers.get("Cookie");
+  const session = await getSession(cookie);
 
   // ログイン済みの場合はホームページに遷移
   if (session.has("userId")) {
@@ -38,42 +21,32 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  try {
-    // フォームデータの取得
-    const formData = await request.formData();
-    const object = Object.fromEntries(formData);
-    const result = await schema.safeParseAsync(object);
-
-    // バリデーション
-    if (!result.success) {
-      const error = result.error.flatten().fieldErrors;
-      console.log({ error });
-      return error
-    }
-
-    // ユーザー登録
-    const { id, name, email, password } = result.data;
-    const hashedPassword = await hash(password, 10);
-    const user = await prisma.user.create({
-      data: { id, name, email, password: hashedPassword },
-    });
-
-
-    // セッションの作成
-    const session = await getSession(request.headers.get("Cookie"));
-    session.set("userId", user.id);
-
-    // ホームページに遷移
-    return redirect("/projects", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
-  } catch (error: any) {
-    // const message = error.message || "予期せぬエラーが発生しました。";
+  // フォームデータの取得
+  const formData = await request.formData();
+  const object = Object.fromEntries(formData);
+  
+  // バリデーション
+  const result = await schema.safeParseAsync(object);
+  if (!result.success) {
+    const error = result.error.flatten().fieldErrors;
     console.log({ error });
-    // return { error: { message } }
+    return error
   }
+
+  // ユーザー登録
+  const { password, ...data } = result.data;
+  const hashedPassword = await hash(password, 10);
+  const user = await createUser({ ...data, password: hashedPassword });
+
+  // セッションの作成
+  const cookie = request.headers.get("Cookie");
+  const session = await getSession(cookie);
+  session.set("userId", user.id);
+
+  // ホームページに遷移
+  return redirect("/projects", {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }
 
 export default function SignIn() {

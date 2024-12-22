@@ -1,39 +1,16 @@
-import { compare } from "bcrypt";
-import { z } from "zod";
-import { User } from "@prisma/client";
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
 import { Link } from "@remix-run/react";
 import { Button } from "@/components/ui/button"
-import { prisma } from "@/prisma"
 import { getSession, commitSession } from "@/sessions.server";
+import { User } from "@/types";
 import { SignInForm } from "./sign-in-form"
-
-const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-}).refine(async ({ email, password }) => {
-  const user = await prisma.user.findFirst({ where: { email }})
-
-  // ユーザーが存在しない場合
-  if (user === null) {
-    return false
-  }
-
-  // パスワードが一致しない場合
-  const isMatch = await compare(password, user.password);
-  if (!isMatch) {
-    return false
-  }
-
-  return true
-}, {
-  message: 'Email or password is incorrect',
-  path: ['password'],
-});
+import { schema } from "./schema"
+import { findUserByEmail } from "../queries";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // セッションの取得
-  const session = await getSession(request.headers.get("Cookie"));
+  const cookie = request.headers.get("Cookie");
+  const session = await getSession(cookie);
 
   // ログイン済みの場合はホームページに遷移
   if (session.has("userId")) {
@@ -44,39 +21,31 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 }
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  try {
-    // フォームデータの取得
-    const formData = await request.formData();
-    const object = Object.fromEntries(formData);
-    const result = await schema.safeParseAsync(object);
+  // フォームデータの取得
+  const formData = await request.formData();
+  const object = Object.fromEntries(formData);
 
-    // バリデーション
-    if (!result.success) {
-      const error = result.error.flatten().fieldErrors;
-      console.log({ error });
-      return error
-    }
-
-    // ユーザー取得
-    // TODO: バリデーションと処理が重複しているため、リファクタリングする
-    const { email, password } = result.data;
-    const user = await prisma.user.findFirst({ where: { email }}) as User;
-
-    // セッションの作成
-    const session = await getSession(request.headers.get("Cookie"));
-    session.set("userId", user.id);
-
-    // ホームページに遷移
-    return redirect("/projects", {
-      headers: {
-        "Set-Cookie": await commitSession(session),
-      },
-    });
-  } catch (error: any) {
-    // const message = error.message || "予期せぬエラーが発生しました。";
+  // バリデーション
+  const result = await schema.safeParseAsync(object);
+  if (!result.success) {
+    const error = result.error.flatten().fieldErrors;
     console.log({ error });
-    // { error: { message } }
+    return error
   }
+
+  // ユーザー取得
+  const { email } = result.data;
+  const user = await findUserByEmail(email) as User;
+
+  // セッションの作成
+  const cookie = request.headers.get("Cookie");
+  const session = await getSession(cookie);
+  session.set("userId", user.id);
+
+  // ホームページに遷移
+  return redirect("/projects", {
+    headers: { "Set-Cookie": await commitSession(session) },
+  });
 }
 
 export default function SignIn() {

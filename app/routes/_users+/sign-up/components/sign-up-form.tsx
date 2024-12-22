@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { action } from "./route"
+import { action } from "../route"
 
 export function SignUpForm() {
   const error = useActionData<typeof action>();
