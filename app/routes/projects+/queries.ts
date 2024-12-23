@@ -1,7 +1,7 @@
 import { embed } from 'ai'
 import pgvector from 'pgvector'
 import { openai } from '@ai-sdk/openai'
-import { PutObjectCommand } from '@aws-sdk/client-s3'
+import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { prisma } from "@/prisma";
 import { s3Client } from "@/s3-client";
 import { 
@@ -14,7 +14,7 @@ import {
 // プロジェクト一覧取得
 export const getProjectList = async () => {
   try {
-    const rawProjectList = await prisma.$queryRaw`
+    const rawProjectList: any[] = await prisma.$queryRaw`
 SELECT
   id,
   name,
@@ -40,10 +40,33 @@ FROM
   }
 }
 
+// 類似プロジェクト一覧取得
+export const getRecommendedProjectList = async (project: Project) => {
+  const recommendedProjectList: any[] = await prisma.$queryRaw`
+SELECT
+  id,
+  name,
+  description,
+  1 - (embedding <=> ${project.embedding}::vector) AS similarity,
+  created,
+  updated
+FROM
+  public."Project"
+WHERE
+  id != ${project.id}
+ORDER BY
+  similarity DESC
+LIMIT
+  20
+`
+
+  return recommendedProjectList
+}
+
 // プロジェクト詳細取得
 export const getProject = async (id: string) => {
   try {
-    const rawProjectList = await prisma.$queryRaw`
+    const rawProjectList: any[] = await prisma.$queryRaw`
 SELECT
   id,
   name,
@@ -130,14 +153,47 @@ export const getEmbedding = async (text: string) => {
   }
 }
 
-// ファイルのアップロード
-export const uploadFiles = async (projectId: string, files: File[]) => {
+// ファイルの取得
+export const getFileList = async (projectId: string) => {
   try {
-    const dirKey = `projects/${projectId}/`;
+    // データの取得
+    const projectUri = `projects/${projectId}`;
+    const filesData = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: process.env.BUCKET_NAME_RAW,
+        Prefix: projectUri,
+      })
+    );
+
+    // ファイルの名称とサイズを取得
+    let fileList: { name: string; size: string; url: string }[] = []
+    if (filesData.Contents?.length) {
+      fileList = filesData.Contents.map((file) => {
+        const name = file.Key?.replace(`${projectUri}/`, "") ?? ""
+        const size = file.Size
+          ? (file.Size / (1000 )).toFixed(1) + " KB"
+          : "0 MB"
+        const url = `https://${bucketName}.s3.${bucketRegion}.amazonaws.com/${projectUri}/${name}`
+
+        return { name, size, url }
+      }).filter((file) => file.name !== "")
+    }
+
+    return fileList
+  } catch (error) {
+    console.error({ error })
+    throw new Response("S3操作に失敗しました", { status: 500 })
+  }
+}
+
+// ファイルのアップロード
+export const uploadFileList = async (projectId: string, files: File[]) => {
+  try {
+    const projectKey = `projects/${projectId}/`;
 
     for (const file of files) {
       const fileBuffer = await file.arrayBuffer();
-      const fileKey = `${dirKey}${file.name}`;
+      const fileKey = `${projectKey}${file.name}`;
       await s3Client.send(
         new PutObjectCommand({
           Bucket: process.env.BUCKET_NAME_RAW,
@@ -146,6 +202,42 @@ export const uploadFiles = async (projectId: string, files: File[]) => {
         })
       );
     }
+  } catch (error) {
+    console.error({ error })
+    throw new Response("S3操作に失敗しました", { status: 500 })
+  }
+}
+
+// ファイルのダウンロード
+export const downloadFileList = async (projectId: string) => {
+  try {
+    const projectUri = `projects/${projectId}`;
+    const filesData = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: process.env.BUCKET_NAME_RAW,
+        Prefix: projectUri,
+      })
+    );
+  
+    const filePromises = filesData.Contents?.map(async (file) => {
+      const fileData = await s3Client.send(
+        new GetObjectCommand({
+          Bucket: process.env.BUCKET_NAME_RAW,
+          Key: file.Key,
+        })
+      );
+      
+      if (fileData.Body) {
+        const byteArray = await fileData.Body.transformToByteArray();  // Uint8Array
+        return {
+          key: file.Key,
+          byteArray: byteArray,
+          contentType: fileData.ContentType,
+        };
+      }
+    });
+  
+    return await Promise.all(filePromises ?? []);
   } catch (error) {
     console.error({ error })
     throw new Response("S3操作に失敗しました", { status: 500 })

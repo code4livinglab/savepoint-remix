@@ -9,15 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ProjectRead } from "@/types"
+import { Project } from "@/types"
 import { Download, ExternalLink, X } from "lucide-react"
-import { action } from "./route"
+import { action } from "../route"
 
 export function ProjectCard({
   project,
   fileList,
 }: {
-  project: ProjectRead,
+  project: Project,
   fileList: { name: string; size: string; url: string }[],
 }) {
   const fileListData = useActionData<typeof action>()

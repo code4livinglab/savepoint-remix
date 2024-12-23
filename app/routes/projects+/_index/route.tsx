@@ -12,7 +12,7 @@ import {
   createProjectUser,
   getEmbedding,
   getProjectList,
-  uploadFiles
+  uploadFileList
 } from "../queries"
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -40,7 +40,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 
   // データの追加作成
-  const id = randomUUID();
+  const id = randomUUID();  // TODO: prisma側で作成させる
   const { name, reason, files, ...data } = result.data;
   const description = `## プロジェクト概要
 
@@ -55,7 +55,7 @@ ${reason}
   const embedding = await getEmbedding(description)
   await createProject({ id, name, description, embedding })
   await createProjectUser({ userId, projectId: id, role: ProjectRole.OWNER })
-  await uploadFiles(id, files)
+  await uploadFileList(id, files)
 
   redirect(`/projects/${id}`);
 }
