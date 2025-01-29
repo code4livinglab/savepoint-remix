@@ -9,6 +9,7 @@ import {
   ProjectCreate,
   ProjectUser,
   ProjectUserCreate,
+  ProjectRole,
 } from "@/types";
 
 // プロジェクト一覧取得
@@ -130,7 +131,14 @@ INSERT INTO
 // プロジェクトユーザー作成
 export const createProjectUser = async (data: ProjectUserCreate) => {
   try {
-    const projectUser: ProjectUser = await prisma.projectUser.create({ data });
+    const result = await prisma.projectUser.create({ data });
+    const projectUser: ProjectUser = {
+      userId: result.userId,
+      projectId: result.projectId,
+      role: result.role as ProjectRole,
+      created: result.created.toISOString(),
+      updated: result.updated.toISOString(),
+    };
     return projectUser
   } catch (error) {
     console.error({ error })

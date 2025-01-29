@@ -4,15 +4,19 @@ export const schema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
   reason: z.string().min(1),
-  files: z
+  file: z
     .custom<File>()
-    .array()
-    .min(1)
-    .refine((files: File[]) => {
-      // TODO: ZIPにしたらファイルサイズを確認
-      return true
+    .refine((file: File) => {
+      return file.type === 'application/zip' || file.name.endsWith('.zip')
+    }, {
+      message: 'The file must be in ZIP format.',
+      path: ['file'],
+    })
+    .refine((file: File) => {
+      const MAX_SIZE = 16_000_000_000  // 16GB
+      return file.size <= MAX_SIZE;
     }, {
       message: 'File size must be less than 5 GB.',
-      path: ['files'],
+      path: ['file'],
     }),
 });

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto'
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node"
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect, unstable_createMemoryUploadHandler, unstable_parseMultipartFormData } from "@remix-run/node"
+import AdmZip from 'adm-zip'
 import { Outlet, useLoaderData } from "@remix-run/react"
 import { AppBar } from "@/components/app-bar"
 import { ProjectRole } from '@/types'
@@ -28,7 +29,12 @@ export async function action({ request }: ActionFunctionArgs) {
   const userId = await authorize(request);
 
   // フォームデータの取得
-  const formData = await request.formData();
+  const uploadHandler = unstable_createMemoryUploadHandler({
+    maxPartSize: 16_000_000_000,  // 16 GB
+  })
+
+  const formData = await unstable_parseMultipartFormData(request, uploadHandler)
+  console.log(formData)
   const object = Object.fromEntries(formData);
 
   // バリデーション
@@ -41,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
   // データの追加作成
   const id = randomUUID();  // TODO: prisma側で作成させる
-  const { name, reason, files, ...data } = result.data;
+  const { name, reason, file, ...data } = result.data;
   const description = `## プロジェクト概要
 
 ${data.description}
@@ -50,6 +56,18 @@ ${data.description}
 
 ${reason}
 `;
+
+  // ZIPファイルを解凍
+  const zip = new AdmZip(Buffer.from(await file.arrayBuffer()));
+  const entries = zip.getEntries();
+  
+  // 解凍したファイルをアップロード用に変換
+  const files = entries
+    .filter(entry => !entry.isDirectory)
+    .map(entry => {
+      const buffer = entry.getData();
+      return new File([buffer], entry.entryName);
+    });
 
   // プロジェクトの作成
   const embedding = await getEmbedding(description)
