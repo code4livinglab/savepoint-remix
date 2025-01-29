@@ -155,12 +155,15 @@ export const getEmbedding = async (text: string) => {
 
 // ファイルの取得
 export const getFileList = async (projectId: string) => {
+  const bucketRegion = process.env.BUCKET_REGION
+  const bucketName = process.env.BUCKET_NAME_RAW
+
   try {
     // データの取得
     const projectUri = `projects/${projectId}`;
     const filesData = await s3Client.send(
       new ListObjectsV2Command({
-        Bucket: process.env.BUCKET_NAME_RAW,
+        Bucket: bucketName,
         Prefix: projectUri,
       })
     );
