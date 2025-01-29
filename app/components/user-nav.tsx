@@ -23,9 +23,9 @@ export function UserNav() {
   const signOutFetcher = useFetcher()
 
   // ユーザー情報を取得
-  useEffect(() => {
-    getUserFetcher.load('/mypage/profile')
-  }, [getUserFetcher])
+  // useEffect(() => {
+  //   getUserFetcher.load('/mypage/profile')
+  // }, [getUserFetcher])
 
   const user = getUserFetcher.data?.user
 

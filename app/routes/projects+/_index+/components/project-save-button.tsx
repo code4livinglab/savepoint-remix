@@ -1,6 +1,6 @@
-import { FolderUp, Pencil } from "lucide-react"
+import { FolderUp, Loader2, Pencil } from "lucide-react"
 import { useState } from "react"
-import { Form } from "@remix-run/react"
+import { Form, useNavigation } from "@remix-run/react"
 import {
   Accordion,
   AccordionContent,
@@ -22,22 +22,29 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 
 export function ProjectSaveDialog() {
-  const [file, setFile] = useState<File|undefined>()
   const [accordionItem, setAccordionItem] = useState("item-1")
+  const navigatoin = useNavigation()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     
-    setFile(file)
     setAccordionItem("item-2")  // ファイル選択後、次のアコーディオンを開く
   };
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="relative">
-          <Pencil />セーブする
+        <Button className="relative"  disabled={navigatoin.state !== 'idle'}>
+          {navigatoin.state === 'idle' ? (
+            <>
+              <Pencil />セーブする
+            </>
+          ) : (
+            <>
+              <Loader2 className="animate-spin" />セーブしています…
+            </>
+          )}          
         </Button>
       </DialogTrigger>
       <DialogContent className="min-w-[60rem]">
@@ -56,11 +63,7 @@ export function ProjectSaveDialog() {
               <AccordionContent className="px-4">
                 <Label htmlFor="file" className="flex flex-col items-center justify-center space-y-2 h-60 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 hover:border hover:border-solid hover:border-primary transition-colors">
                   <FolderUp className="w-12 h-12 text-muted-foreground" />
-                  {!!file ? (
-                    <p className="text-xs text-muted-foreground">ファイルが選択されました</p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">クリックしてZIPファイルを選択する</p>
-                  )}
+                  <p className="text-xs text-muted-foreground">クリックしてZIPファイルを選択する</p>
                 </Label>
               </AccordionContent>
             </AccordionItem>

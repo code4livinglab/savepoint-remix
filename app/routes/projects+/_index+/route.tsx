@@ -62,11 +62,12 @@ ${reason}
   const entries = zip.getEntries();
   
   // 解凍したファイルをアップロード用に変換
+  const dirName = file.name.replace('.zip', '');  // ZIP直下のディレクトリ名
   const files = entries
-    .filter(entry => !entry.isDirectory)
+    .filter(entry => !entry.isDirectory && !entry.entryName.startsWith('.') && !entry.entryName.startsWith('__MACOSX'))
     .map(entry => {
       const buffer = entry.getData();
-      return new File([buffer], entry.entryName);
+      return new File([buffer], entry.entryName.replace(dirName + '/', ''));
     });
 
   // プロジェクトの作成
@@ -75,7 +76,7 @@ ${reason}
   await createProjectUser({ userId, projectId: id, role: ProjectRole.OWNER })
   await uploadFileList(id, files)
 
-  redirect(`/projects/${id}`);
+  return redirect(`/projects/${id}`);
 }
 
 export default function ProjectList() {
