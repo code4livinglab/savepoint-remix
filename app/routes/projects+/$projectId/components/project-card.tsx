@@ -20,18 +20,25 @@ export function ProjectCard({
   project: Project,
   fileList: { name: string; size: string; url: string }[],
 }) {
-  const fileListData = useActionData<typeof action>()
+  const actionData = useActionData<typeof action>()
   const navigate = useNavigate()
 
-  // TODO: ロードが 0 byte になる
   useEffect(() => {
-    fileListData?.forEach((file) => {
+    const fileList = actionData?.fileList
+    if (!Array.isArray(fileList)) return
+
+    fileList.forEach((file) => {
       if (!file?.key || !file.byteArray || !file.contentType) {
-        return null
+        return
       }
-  
-      const byteArray = new Uint8Array(file.byteArray)
-      const blob = new Blob([byteArray], { type: file.contentType })  // blob
+
+      // Base64文字列をデコードしてバイナリデータに変換
+      const binaryString = atob(file.byteArray);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: file.contentType })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       
@@ -42,7 +49,7 @@ export function ProjectCard({
       window.URL.revokeObjectURL(url)
       a.remove()
     })
-  }, [fileListData])
+  }, [actionData])
   
   return (
     <Card className="relative flex flex-col justify-between w-96 h-[calc(100dvh-9)]">

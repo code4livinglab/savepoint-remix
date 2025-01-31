@@ -263,10 +263,11 @@ export const downloadFileList = async (projectId: string) => {
       );
       
       if (fileData.Body) {
-        const byteArray = await fileData.Body.transformToByteArray();  // Uint8Array
+        const byteArray = await fileData.Body.transformToByteArray();
+        const base64String = Buffer.from(byteArray).toString('base64');  // Base64エンコード
         return {
           key: file.Key,
-          byteArray: byteArray,
+          byteArray: base64String,
           contentType: fileData.ContentType,
         };
       }
