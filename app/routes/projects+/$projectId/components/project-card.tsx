@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Form, Link, useActionData, useNavigate } from '@remix-run/react'
-import JSZip from 'jszip'
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -24,51 +23,32 @@ export function ProjectCard({
   const actionData = useActionData<typeof action>()
   const navigate = useNavigate()
 
-  const [isLoading, setIsLoading] = useState(false)
-
   useEffect(() => {
-    const downloadFiles = async () => {
-      const fileList = actionData?.fileList
-      if (!Array.isArray(fileList) || fileList.length === 0) return
+    const fileList = actionData?.fileList
+    if (!Array.isArray(fileList)) return
 
-      setIsLoading(true)
-      try {
-        const zip = new JSZip()
-
-        // 全てのファイルをZIPに追加
-        fileList.forEach((file) => {
-          if (!file?.key || !file.byteArray || !file.contentType) return
-
-          // Base64文字列をデコードしてバイナリデータに変換
-          const binaryString = atob(file.byteArray)
-          const bytes = new Uint8Array(binaryString.length)
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i)
-          }
-
-          const fileName = file.key.split('/').pop() ?? ''
-          zip.file(fileName, bytes)
-        })
-
-        // ZIPファイルを生成してダウンロード
-        const content = await zip.generateAsync({ type: 'blob' })
-        const url = URL.createObjectURL(content)
-        const a = document.createElement('a')
-        
-        a.href = url
-        a.download = `${project.name}.zip`
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-        a.remove()
-      } catch (error) {
-        console.error('ZIP作成エラー:', error)
-      } finally {
-        setIsLoading(false)
+    fileList.forEach((file) => {
+      if (!file?.key || !file.byteArray || !file.contentType) {
+        return
       }
-    }
 
-    downloadFiles()
+      // Base64文字列をデコードしてバイナリデータに変換
+      const binaryString = atob(file.byteArray);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: file.contentType })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      
+      a.href = url
+      a.download = file.key.split('/').pop() ?? ''
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      a.remove()
+    })
   }, [actionData])
   
   return (
@@ -120,9 +100,9 @@ export function ProjectCard({
         </CardContent>
         <CardFooter>
           <Form method="post" className="w-full">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              <Download className={isLoading ? 'animate-spin' : ''} />
-              {isLoading ? 'ZIPを作成中...' : 'ロードする'}
+            <Button type="submit" className="w-full">
+              <Download />
+              ロードする
             </Button>
           </Form>
         </CardFooter>
