@@ -35,16 +35,16 @@ export function ProjectSaveDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="relative"  disabled={navigatoin.state !== 'idle'}>
-          {navigatoin.state === 'idle' ? (
-            <>
-              <Pencil />セーブする
-            </>
-          ) : (
+        <Button className="relative" disabled={navigatoin.state === 'submitting'}>
+          {navigatoin.state === 'submitting' ? (
             <>
               <Loader2 className="animate-spin" />セーブしています…
             </>
-          )}          
+          ) : (
+            <><Pencil />セーブする
+              
+            </>
+          )}
         </Button>
       </DialogTrigger>
       <DialogContent className="min-w-[60rem]">

@@ -29,9 +29,12 @@ export async function authorize(request: Request) {
   const userId: string | undefined = session.get("userId");
 
   if (typeof userId === "undefined") {
-    throw new Response("Unauthorized", { status: 401 });
+    throw redirect("/sign-in", {
+      headers: {
+        "Set-Cookie": await destroySession(session)
+      }
+    });
   }
 
   return userId;
 }
-

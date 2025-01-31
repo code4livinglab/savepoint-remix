@@ -32,11 +32,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     console.log({ error });
     return error
   }
-
+  
   // ユーザー登録
   const { password, ...data } = result.data;
   const hashedPassword = await hash(password, 10);
-  const user = await createUser({ ...data, password: hashedPassword });
+  const user = await createUser({ 
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    password: hashedPassword,
+  });
 
   // セッションの作成
   const cookie = request.headers.get("Cookie");

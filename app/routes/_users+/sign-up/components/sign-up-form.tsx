@@ -26,7 +26,7 @@ export function SignUpForm() {
               id="id" 
               name="id" 
               type="text"
-              className={error?.id ? "border-destructive" : ""} 
+              className={error?.id ? "border-destructive" : ""}
             />
             <p className="text-xs text-muted-foreground">小文字の半角英数字のみ</p>
             {error?.id && (
@@ -41,7 +41,7 @@ export function SignUpForm() {
               id="name" 
               name="name" 
               type="text"
-              className={error?.name ? "border-destructive" : ""} 
+              className={error?.name ? "border-destructive" : ""}
             />
             {error?.name && (
               <p className="text-xs text-destructive">
@@ -55,7 +55,7 @@ export function SignUpForm() {
               id="email" 
               name="email" 
               type="email"
-              className={error?.email ? "border-destructive" : ""} 
+              className={error?.email ? "border-destructive" : ""}
             />
             {error?.email && (
               <p className="text-xs text-destructive">
@@ -69,7 +69,7 @@ export function SignUpForm() {
               id="password" 
               name="password" 
               type="password"
-              className={error?.password ? "border-destructive" : ""} 
+              className={error?.password ? "border-destructive" : ""}
             />
             {error?.password && (
               <p className="text-xs text-destructive">
