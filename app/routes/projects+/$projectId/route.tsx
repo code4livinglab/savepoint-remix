@@ -1,12 +1,20 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { ProjectCard } from './components/project-card'
 import { ProjectList } from './components/project-list'
-import { downloadFileList, getFileList, getProject, getRecommendedProjectList } from '../queries';
+import { 
+  createBookmark,
+  deleteBookmark,
+  downloadFileList, 
+  getFileList, 
+  getProject, 
+  getRecommendedProjectList,
+  findBookmark,
+} from '../queries';
 import { authorize } from '@/sessions.server';
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  await authorize(request)
+  const userId = await authorize(request)
 
   // エラーハンドリング
   const projectId = params.projectId
@@ -21,11 +29,19 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   // 類似プロジェクトの取得
   const recommendedProjectList = await getRecommendedProjectList(project)
 
-  return { project, fileList, recommendedProjectList }
+  // ブックマーク状態の取得
+  const isBookmarked = await findBookmark(userId, projectId)
+
+  return { 
+    project, 
+    fileList, 
+    recommendedProjectList,
+    isBookmarked,
+  }
 }
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
-  await authorize(request)
+  const userId = await authorize(request)
 
   // エラーハンドリング
   const projectId = params.projectId
@@ -33,9 +49,21 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     throw new Response("プロジェクトが見つかりません", { status: 404 });
   }
 
+  const formData = await request.formData()
+  const intent = formData.get("intent")
+
+  if (intent === "bookmark") {
+    await createBookmark(userId, projectId)
+    return{ success: true }
+  }
+
+  if (intent === "unbookmark") {
+    await deleteBookmark(userId, projectId)
+    return{ success: true }
+  }
+
   // ロード
   const fileList = await downloadFileList(projectId)
-
   return { fileList }
 }
 

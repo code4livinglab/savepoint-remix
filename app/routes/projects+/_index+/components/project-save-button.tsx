@@ -1,5 +1,5 @@
 import { FolderUp, Loader2, Pencil } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Form, useActionData, useNavigation } from "@remix-run/react"
 import {
   Accordion,
@@ -21,13 +21,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { action } from "../route"
+
 export function ProjectSaveDialog() {
   const error = useActionData<typeof action>();
-  console.log(error)
 
   const [accordionItem, setAccordionItem] = useState("item-1")
+  const [open, setOpen] = useState(false)
   const navigatoin = useNavigation()
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -35,8 +36,15 @@ export function ProjectSaveDialog() {
     setAccordionItem("item-2")  // ファイル選択後、次のアコーディオンを開く
   };
 
+  // フォーム送信後、ダイアログを閉じる
+  useEffect(() => {
+    if (navigatoin.state !== 'submitting') {
+      setOpen(false)
+    }
+  }, [navigatoin.state])
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="relative">
           <Pencil />セーブする

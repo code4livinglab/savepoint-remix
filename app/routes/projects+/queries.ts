@@ -64,6 +64,30 @@ export const findProjectListByUser = async (userId: string) => {
   }
 }
 
+// ブックマークされたプロジェクト一覧取得
+export const findProjectListByBookmark = async (userId: string) => {
+  try {
+    const result = await prisma.bookmark.findMany({
+      where: { userId },
+      include: { project: true },
+    });
+
+    const projectList: Project[] = result.map((bookmark) => ({
+      id: bookmark.project.id,
+      name: bookmark.project.name,
+      description: bookmark.project.description,
+      embedding: [],
+      created: bookmark.project.created.toISOString(),
+      updated: bookmark.project.updated.toISOString(),
+    }))
+
+    return projectList
+  } catch (error) {
+    console.error({ error });
+    throw new Response("DB操作に失敗しました", { status: 500 });
+  }
+}
+
 
 // 類似プロジェクト一覧取得
 export const getRecommendedProjectList = async (project: Project) => {
@@ -291,5 +315,43 @@ export const downloadFileList = async (projectId: string) => {
   } catch (error) {
     console.error({ error })
     throw new Response("S3操作に失敗しました", { status: 500 })
+  }
+}
+
+// ブックマークの作成
+export const createBookmark = async (userId: string, projectId: string) => {
+  try {
+    return await prisma.bookmark.create({
+      data: { userId, projectId },
+    });
+  } catch (error) {
+    console.error({ error });
+    throw new Response("DB操作に失敗しました", { status: 500 });
+  }
+}
+
+// ブックマークの取得
+export const findBookmark = async (userId: string, projectId: string) => {
+  try {
+    return await prisma.bookmark.findFirst({
+      where: { userId, projectId },
+    });
+  } catch (error) {
+    console.error({ error });
+    throw new Response("DB操作に失敗しました", { status: 500 });
+  }
+}
+
+// ブックマークの削除
+export const deleteBookmark = async (userId: string, projectId: string) => {
+  try {
+    return await prisma.bookmark.delete({
+      where: {
+        userId_projectId: { userId, projectId },
+      },
+    });
+  } catch (error) {
+    console.error({ error });
+    throw new Response("DB操作に失敗しました", { status: 500 });
   }
 }

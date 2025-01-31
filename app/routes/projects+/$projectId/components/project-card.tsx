@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Form, Link, useActionData, useNavigate } from '@remix-run/react'
+import { Form, Link, useActionData, useLoaderData, useNavigate } from '@remix-run/react'
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -10,8 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Project } from "@/types"
-import { Download, ExternalLink, Maximize2, Minimize2, X } from "lucide-react"
-import { action } from "../route"
+import { Bookmark, BookmarkCheck, Download, ExternalLink, Maximize2, Minimize2, X } from "lucide-react"
+import { action, loader } from "../route"
 
 export function ProjectCard({
   project,
@@ -20,7 +20,9 @@ export function ProjectCard({
   project: Project,
   fileList: { name: string; size: string; url: string }[],
 }) {
+  const { isBookmarked } = useLoaderData<typeof loader>()
   const actionData = useActionData<typeof action>()
+  
   const navigate = useNavigate()
   const [isMinimized, setIsMinimized] = useState(false)
 
@@ -73,7 +75,23 @@ export function ProjectCard({
             </Button>
           </div>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl mb-4">{project.name}</CardTitle>
+            <CardTitle className="text-2xl">{project.name}</CardTitle>
+            <div className="flex items-center gap-2 mb-4">
+              <Form method="post" className="flex-shrink-0">
+                <input type="hidden" name="intent" value={isBookmarked ? "unbookmark" : "bookmark"} />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  type="submit"
+                >
+                  {isBookmarked ? (
+                    <BookmarkCheck className="h-4 w-4 text-primary" />
+                  ) : (
+                    <Bookmark className="h-4 w-4" />
+                  )}
+                </Button>
+              </Form>
+            </div>
             <CardDescription className="line-clamp-[12]">
               {project.description}
             </CardDescription>

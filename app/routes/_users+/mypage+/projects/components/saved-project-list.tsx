@@ -27,7 +27,7 @@ export function SavedProjectList({ projectList }: { projectList: Project[] }) {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-lg">保存したプロジェクト</CardTitle>
+        <CardTitle className="text-lg">セーブしたプロジェクト</CardTitle>
       </CardHeader>
       <CardContent>
         {projectList.map((project, index) => (

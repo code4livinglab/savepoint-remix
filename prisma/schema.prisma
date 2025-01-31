@@ -12,14 +12,15 @@ datasource db {
 }
 
 model User {
-  id          String        @id
-  name        String
-  email       String        @unique
-  password    String
-  projects    ProjectUser[]
+  id            String        @id
+  name          String
+  email         String        @unique
+  password      String
+  projects      ProjectUser[]
+  bookmarks     Bookmark[]
   notifications NotificationUser[]
-  created     DateTime      @default(now())
-  updated     DateTime      @default(now()) @updatedAt
+  created       DateTime      @default(now())
+  updated       DateTime      @default(now()) @updatedAt
 }
 
 model Project {
@@ -28,6 +29,7 @@ model Project {
   description String
   embedding   Unsupported("vector")?
   users       ProjectUser[]
+  bookmarks   Bookmark[]
   created     DateTime      @default(now())
   updated     DateTime      @default(now()) @updatedAt
 }
@@ -38,6 +40,17 @@ model ProjectUser {
   project   Project  @relation(fields: [projectId], references: [id])
   projectId String
   role      ProjectRole
+  created   DateTime @default(now())
+  updated   DateTime @default(now()) @updatedAt
+
+  @@id([userId, projectId])
+}
+
+model Bookmark {
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  project   Project  @relation(fields: [projectId], references: [id])
+  projectId String
   created   DateTime @default(now())
   updated   DateTime @default(now()) @updatedAt
 
