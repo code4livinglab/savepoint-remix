@@ -170,6 +170,20 @@ export const createProjectUser = async (data: ProjectUserCreate) => {
   }
 }
 
+// プロジェクトユーザー削除
+export const deleteProjectUser = async (userId: string, projectId: string) => {
+  try {
+    await prisma.projectUser.delete({
+      where: {
+        userId_projectId: { userId, projectId },
+      },
+    });
+  } catch (error) {
+    console.error({ error });
+    throw new Response("DB操作に失敗しました", { status: 500 });
+  }
+}
+
 // エンベディング取得
 export const getEmbedding = async (text: string) => {
   try {

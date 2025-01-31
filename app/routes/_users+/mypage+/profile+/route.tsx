@@ -62,7 +62,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const idUser = await findUserById(object.id as string)
   if (idUser !== null && idUser.id !== userId) {
     if (error.id === undefined) {
-     error.id = ['Already used']
+      error.id = ['Already used']
     } else {
       error.id.push('Already used')
     }
@@ -72,7 +72,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const emailUser = await findUserByEmail(object.email as string)
   if (emailUser !== null && emailUser.email !== currentUser.email) {
     if (error.email === undefined) {
-     error.email = ['Already used']
+      error.email = ['Already used']
     } else {
       error.email.push('Already used')
     }

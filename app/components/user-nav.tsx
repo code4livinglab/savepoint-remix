@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { loader } from "@/routes/mypage+/profile/route"
+import { loader } from "@/routes/_users+/mypage+/profile+/route"
 
 export function UserNav() {
   // 別ルートのデータを利用
