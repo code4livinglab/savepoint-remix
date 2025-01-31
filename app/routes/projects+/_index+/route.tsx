@@ -34,7 +34,6 @@ export async function action({ request }: ActionFunctionArgs) {
   })
 
   const formData = await unstable_parseMultipartFormData(request, uploadHandler)
-  console.log(formData)
   const object = Object.fromEntries(formData);
 
   // バリデーション

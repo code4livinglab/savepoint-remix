@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const schema = z.object({
   name: z.string().min(1),
-  description: z.string().min(1),
-  reason: z.string().min(1),
+  description: z.string().min(1).max(140),
+  reason: z.string().min(1).max(140),
   file: z
     .custom<File>()
     .refine((file: File) => {
