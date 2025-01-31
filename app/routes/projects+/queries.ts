@@ -41,6 +41,30 @@ FROM
   }
 }
 
+// 保存したプロジェクト一覧取得
+export const findProjectListByUser = async (userId: string) => {
+  try {
+    const result = await prisma.project.findMany({
+      where: { users: { some: { userId } } },
+    })
+
+    const projectList: Project[] = result.map((project) => ({
+      id: project.id,
+      name: project.name,
+      description: project.description,
+      embedding: [],
+      created: project.created.toISOString(),
+      updated: project.updated.toISOString(),
+    }))
+
+    return projectList
+  } catch (error) {
+    console.error({ error });
+    throw new Response("DB操作に失敗しました", { status: 500 });
+  }
+}
+
+
 // 類似プロジェクト一覧取得
 export const getRecommendedProjectList = async (project: Project) => {
   const recommendedProjectList: any[] = await prisma.$queryRaw`
