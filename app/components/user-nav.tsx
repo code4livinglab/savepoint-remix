@@ -1,8 +1,9 @@
 import { UserRound } from "lucide-react"
+import { useEffect } from "react"
+import { Link, useFetcher } from "@remix-run/react"
 import {
   Avatar,
   AvatarFallback,
-  AvatarImage,
 } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,11 +13,22 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { loader } from "@/routes/_users+/mypage+/profile+/route"
 
 export function UserNav() {
+  // 別ルートのデータを利用
+  const getUserFetcher = useFetcher<typeof loader>()
+  const signOutFetcher = useFetcher()
+
+  // ユーザー情報を取得
+  // useEffect(() => {
+  //   getUserFetcher.load('/mypage/profile')
+  // }, [getUserFetcher])
+
+  const user = getUserFetcher.data?.user
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -31,33 +43,48 @@ export function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">shadcn</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              m@example.com
+            <p className="text-sm font-medium leading-none">
+              {user?.name ?? "ユーザー名"}
             </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email ?? "email@example.com"}
+            </p>
+            
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>New Team</DropdownMenuItem>
+          <Link to="/mypage/projects">
+            <DropdownMenuItem>マイページ</DropdownMenuItem>
+          </Link>
+          <Link to="/mypage/profile">
+            <DropdownMenuItem>アカウント情報</DropdownMenuItem>
+          </Link>
+          <Link
+            to="https://ludicrous-flyingfish-cc4.notion.site/terms-of-use"
+            target="_blank"
+          >
+            <DropdownMenuItem>利用規約</DropdownMenuItem>
+          </Link>
+          <Link
+            to="https://ludicrous-flyingfish-cc4.notion.site/privacy-policy"
+            target="_blank"
+          >
+            <DropdownMenuItem>プライバシーポリシー</DropdownMenuItem>
+          </Link>
+          <Link
+            to="https://forms.gle/uUKaFR56QQSgaNPz7"
+            target="_blank"
+          >
+            <DropdownMenuItem>お問い合わせ</DropdownMenuItem>
+          </Link>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
+        <signOutFetcher.Form action="/sign-out" method="post">
+          <DropdownMenuItem>
+            <button type="submit" className="w-full text-left">ログアウト</button>
+          </DropdownMenuItem>
+        </signOutFetcher.Form>
       </DropdownMenuContent>
     </DropdownMenu>
   )
