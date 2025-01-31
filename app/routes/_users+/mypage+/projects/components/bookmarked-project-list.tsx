@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { Project } from "@/types"
 import { Form } from '@remix-run/react'
 import { Button } from '@/components/ui/button'
-import { Bookmark } from 'lucide-react'
+import { BookmarkCheck } from 'lucide-react'
 
 export function BookmarkedProjectList({ projectList }: { projectList: Project[] }) {
   const navigate = useNavigate()
@@ -47,7 +47,7 @@ export function BookmarkedProjectList({ projectList }: { projectList: Project[] 
                   size="icon"
                   className="text-primary hover:text-primary hover:bg-primary/10"
                 >
-                  <Bookmark className="h-4 w-4" />
+                  <BookmarkCheck className="h-4 w-4" />
                 </Button>
               </Form>
             </div>
