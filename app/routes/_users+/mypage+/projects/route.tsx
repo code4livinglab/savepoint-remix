@@ -25,7 +25,7 @@ export default function SavedProjects() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/projects')}
           >
             戻る
           </Button>

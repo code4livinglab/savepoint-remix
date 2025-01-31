@@ -43,7 +43,7 @@ export default function ProjectDetails() {
   const { project, recommendedProjectList, fileList } = useLoaderData<typeof loader>()
   
   return (
-    <div className="flex justify-between mx-8">
+    <div className="flex justify-between mx-8 h-[calc(100dvh-9rem)]">
       <ProjectList projectList={recommendedProjectList} />
       <ProjectCard project={project} fileList={fileList} />
     </div>
